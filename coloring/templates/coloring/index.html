@@ -30,10 +30,10 @@
 
 		#myCanvas {
 			padding-left: 0;
-		    padding-right: 0;
-		    margin-left: auto;
-		    margin-right: auto;
-		    display: block;
+			padding-right: 0;
+			margin-left: auto;
+			margin-right: auto;
+			display: block;
 		}
 	</style>
 
@@ -57,15 +57,26 @@
 
 			// your rectangle gradient interaction goes in this function
 			// you may also add code outside of the function (e.g., global variables)
-			function myGradientInteraction() {
+			function myGradientInteraction(path) {
 				var tool = new paper.Tool();
 
-				tool.onMouseDown = function (event) {
+				gradientOrigin = null;
+				gradientDest   = null;
 
+				tool.onMouseDown = function (event) {
+					gradientOrigin = event.point;
 				}
 
 				tool.onMouseUp = function (event) {
-					
+					gradientDest = event.point;
+					path.fillColor = {
+						gradient: {
+								stops: [cp.history[cp.history.length - 1], cp.history[cp.history.length - 2]]
+						},
+						origin: gradientOrigin,
+						destination: gradientDest
+					};
+					paper.view.draw();
 				}
 			}
 
@@ -114,15 +125,25 @@
 				paper.setup(canvas);
 				getColorsCreatePalette();
 
-				paper.project.importSVG(mandala.filePath, function(item) { 
+				paper.project.importSVG(mandala.filePath, function(item) {
 					mandala.item = item._children["design-freepik"];
 				    paper.project.insertLayer(0,mandala.item);
+
+						let path = new paper.Path();
+						path.add(new paper.Point(120, 270));
+						path.add(new paper.Point(270, 120));
+						path.add(new paper.Point(420, 270));
+						path.closed = true;
+						path.strokeColor = 'black';
+						path.strokeWidth = 5;
+						path.fillColor = 'red';
+						path.insertAbove(mandala.item);
 
 				    if (custom) {
 				    	myCustomInteraction();	
 				    } else {
-				    	myGradientInteraction();
-				    }		
+				    	myGradientInteraction(path);
+				    }
 					
 				}); 
 			}
