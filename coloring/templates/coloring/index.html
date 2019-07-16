@@ -103,65 +103,7 @@
           // For project 2 Cycle III
           // For documentation, see https://docs.google.com/document/d/1-p37Lujq6QtOg6td_Gt5AGCiiwleA3bv6JHiHBX0jXQ/edit?usp=sharing
       
-          ;(() => {
-
-            console.log("huechanger selected");
-            var tool = new paper.Tool();
-            tool.name='huechangerTool'
-
-            tool.onMouseDown = function (event) {
-              var hit = mandala.item.hitTest(event.point, { tolerance: 10, fill: true });
-              if (hit) {  
-                hit.item.fillColor = cp.history[cp.history.length - 1];
-                paper.view.onFrame = function onFrame(event) {
-                  if (event.count % 2 === 0) {
-                    hit.item.fillColor.hue += 1;
-                    //console.log("?");
-                    paper.view.draw();
-                  }
-                }
-                console.log("changed color to red");
-              }
-            }
-
-          })()
-          
-          
-          ;(() => {
-            var tool = new paper.Tool();
-            tool.name='randomColorRay';
-            let startPos;
-            let endPos;
-            let lastObj;
-
-              tool.onMouseDown = function (event) {
-                console.log(event.point);
-                startPos = event.point;
-                /*var hit = mandala.item.hitTest(event.point, { tolerance: 10, fill: true });
-                if (hit) {
-                  c1 = getRandomColor();
-                  console.log(c1)
-                  hit.item.fillColor = c1;
-                }*/
-              }
-              
-              tool.onMouseUp = function (event) {
-                console.log(event.point)
-                endPos = event.point;
-                  
-                let sampleNum = 30;
-                let stepX = (endPos.x - startPos.x) / sampleNum
-                let stepY = (endPos.y - startPos.y) / sampleNum
-                for (let i = 0; i < sampleNum; i += 1) {
-                  let hit = mandala.item.hitTest(new paper.Point(startPos.x+stepX*i, startPos.y+stepY*i), { tolerance: 10, fill: true });
-                  if (hit) {
-                      //hit.item.fillColor = new paper.Color().random();
-                    hit.item.fillColor = paper.Color.random();
-                  }
-                }
-              }
-          })()
-          
+          // Choose-Your-Color Pen
           ;(() => {
             var tool = new paper.Tool();
             tool.name='defaultColorTool'
@@ -174,6 +116,55 @@
             }
           })()
           
+          // Random Color Pen
+          ;(() => {
+            var tool = new paper.Tool();
+            tool.name='randomColorRayTool';
+            let startPos;
+            let endPos;
+            let lastObj;
+
+            tool.onMouseDown = function (event) {
+              console.log(event.point);
+              startPos = event.point;
+            }
+            tool.onMouseUp = function (event) {
+              console.log(event.point)
+              endPos = event.point;
+              let sampleNum = 50;
+              let stepX = (endPos.x - startPos.x) / sampleNum
+              let stepY = (endPos.y - startPos.y) / sampleNum
+              for (let i = 0; i < sampleNum; i += 1) {
+                let hit = mandala.item.hitTest(new paper.Point(startPos.x+stepX*i, startPos.y+stepY*i), { tolerance: 10, fill: true });
+                if (hit && hit.item != lastObj) {
+                  //hit.item.fillColor = new paper.Color().random();
+                  hit.item.fillColor = paper.Color.random();
+                }
+              }
+            }
+          })()
+          
+          // Dynamic Hue Pen
+          ;(() => {
+            console.log("huechanger selected");
+            var tool = new paper.Tool();
+            tool.name='huechangerTool'
+
+            tool.onMouseDown = function (event) {
+              var hit = mandala.item.hitTest(event.point, { tolerance: 10, fill: true });
+              if (hit) {  
+                hit.item.fillColor = cp.history[cp.history.length - 1];
+                paper.view.onFrame = function onFrame(event) {
+                  if (event.count % 2 === 0) {
+                    hit.item.fillColor.hue += 1;
+                    paper.view.draw();
+                  }
+                }
+                //console.log("changed color to red");
+              }
+            }
+          })()
+          
           // From https://stackoverflow.com/questions/49215584/toggling-multiple-tools-on-paper-js 
           // Attach click handlers for Tool activation on all
           // DOM buttons with class '.tool-button'
@@ -182,6 +173,31 @@
               activateTool(e.target.getAttribute('data-tool-name'))
             })
           })
+          
+          // Eraser
+          ;(() => {
+            var tool = new paper.Tool();
+            tool.name='eraserTool';
+            let startPos;
+            let endPos;
+            let lastObj;
+
+            tool.onMouseDown = function (event) {
+              startPos = event.point;
+            }
+            tool.onMouseUp = function (event) {
+              endPos = event.point;
+              let sampleNum = 50;
+              let stepX = (endPos.x - startPos.x) / sampleNum
+              let stepY = (endPos.y - startPos.y) / sampleNum
+              for (let i = 0; i < sampleNum; i += 1) {
+                let hit = mandala.item.hitTest(new paper.Point(startPos.x+stepX*i, startPos.y+stepY*i), { tolerance: 10, fill: true });
+                if (hit) {
+                  hit.item.fillColor = "#ffffff";
+                }
+              }
+            }
+          })()
           
           //useTool();
           //console.log("useTool(): finished.") // Should never be reached
@@ -201,25 +217,28 @@
 		}
     
     // Helpers
-    function getRandomColor() {
+    /*function getRandomColor() {
       var letters = '0123456789ABCDEF';
       var color = '#';
       for (var i = 0; i < 6; i++) {
         color += letters[Math.floor(Math.random() * 16)];
       }
       return color;
-    }
+    }*/
 	</script>
 </head>
   
 <body>	
 
 	<canvas id="myCanvas" width="750px" height="750px"></canvas>
-	<div id="color-palette" style="float: right"></div>
+	<div id="color-palette" style="float: left"></div>
+  <div id="internationale-player" style="float: right">
+    <iframe src="//commons.wikimedia.org/wiki/File:Internationale-ru.ogg?embedplayer=yes" width="220" height="80" frameborder="0" webkitAllowFullScreen mozallowfullscreen allowFullScreen></iframe>
+  </div>
   
     <!-- From https://www.iconfinder.com/icons/725563/art_artist_brush_drawing_paint_paintbrush_painting_icon -->
-  <div id="colorToolIcon1"
-       style='float: left; margin: 20px'>
+  <div id="colorToolIcon0"
+       style='float: left; margin: 20px; text-align: center'>
     <img 
          class="tool-button"
          data-tool-name="defaultColorTool"
@@ -232,10 +251,10 @@
   
   <!-- From https://www.iconfinder.com/icons/725545/magic_spell_tool_wand_wizard_icon -->
   <div id="colorToolIcon1"
-       style='float: left; margin: 20px'>
+       style='float: left; margin: 20px; text-align: center'>
     <img 
          class="tool-button"
-         data-tool-name="randomColorRay"
+         data-tool-name="randomColorRayTool"
          src='data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiA/PjwhRE9DVFlQRSBzdmcgIFBVQkxJQyAnLS8vVzNDLy9EVEQgU1ZHIDEuMS8vRU4nICAnaHR0cDovL3d3dy53My5vcmcvR3JhcGhpY3MvU1ZHLzEuMS9EVEQvc3ZnMTEuZHRkJz48c3ZnIGVuYWJsZS1iYWNrZ3JvdW5kPSJuZXcgMCAwIDEyOCAxMjgiIGlkPSLQodC70L7QuV8xIiB2ZXJzaW9uPSIxLjEiIHZpZXdCb3g9IjAgMCAxMjggMTI4IiB4bWw6c3BhY2U9InByZXNlcnZlIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIj48Zz48Y2lyY2xlIGN4PSI2NCIgY3k9IjY0IiBmaWxsPSIjQ0JFOEUxIiByPSI2MiIvPjxnPjxnPjxnPjxwYXRoIGQ9Ik02My45LDU5LjFjLTQuMiwwLTcuNiwzLjQtNy42LDcuNnY1OC44YzIuNSwwLjMsNS4xLDAuNSw3LjcsMC41YzIuNSwwLDUtMC4yLDcuNS0wLjVWNjYuNyAgICAgIEM3MS41LDYyLjUsNjguMSw1OS4xLDYzLjksNTkuMXoiIGZpbGw9IiM1MjU0NEYiLz48L2c+PGc+PHBhdGggZD0iTTYzLjksNTkuMWMtNC4yLDAtNy42LDMuNC03LjYsNy42djcuNmgxNS4ydi03LjZDNzEuNSw2Mi41LDY4LjEsNTkuMSw2My45LDU5LjF6IiBmaWxsPSIjRTdFOEUzIi8+PC9nPjxnIG9wYWNpdHk9IjAuMSI+PGc+PHBhdGggZD0iTTY2LjQsNTkuMXY2Ni45YzEuNy0wLjEsMy40LTAuMiw1LjEtMC40VjY0LjFDNzEuNSw2MS4zLDY5LjIsNTkuMSw2Ni40LDU5LjF6IiBmaWxsPSIjMDMwNTA1Ii8+PC9nPjwvZz48Zz48cGF0aCBkPSJNNjMuOSw1OC4xYy00LjcsMC04LjYsMy45LTguNiw4LjZ2NTguN2MwLjcsMC4xLDEuMywwLjIsMiwwLjN2LTU5YzAtMy42LDMtNi42LDYuNi02LjZzNi42LDMsNi42LDYuNiAgICAgIHY1OWMwLjctMC4xLDEuMy0wLjIsMi0wLjNWNjYuN0M3Mi41LDYxLjksNjguNiw1OC4xLDYzLjksNTguMXoiIGZpbGw9IiMyRDJFMkQiLz48L2c+PC9nPjxnPjxnPjxnPjxwYXRoIGQ9Ik02My40LDI5LjZjLTIuOCw1LjEtNi45LDcuNS0xMi4xLDcuN2M1LDIuNSw3LjUsNi41LDcuNywxMi4xYzIuNy00LjcsNi43LTcuMywxMi4xLTcuNyAgICAgICBDNjYsMzkuMyw2My40LDM1LjIsNjMuNCwyOS42eiIgZmlsbD0iI0VDRDY1MiIvPjwvZz48Zz48cGF0aCBkPSJNNzEuNSw0MC44Yy00LjgtMi4yLTcuMS01LjktNy4xLTExLjJjMC0wLjUtMC4zLTAuOS0wLjgtMWMtMC40LTAuMS0wLjksMC4xLTEuMSwwLjUgICAgICAgYy0yLjYsNC42LTYuMiw3LTExLjMsNy4yYy0wLjUsMC0wLjgsMC4zLTAuOSwwLjhjLTAuMSwwLjQsMC4xLDAuOSwwLjUsMS4xYzQuNywyLjMsNyw2LDcuMSwxMS4yYzAsMC40LDAuMywwLjgsMC44LDAuOSAgICAgICBjMC4xLDAsMC4yLDAsMC4yLDBjMC40LDAsMC43LTAuMiwwLjktMC41YzIuNS00LjQsNi4yLTYuOCwxMS4zLTcuMmMwLjUsMCwwLjgtMC40LDAuOS0wLjhDNzIuMiw0MS40LDcxLjksNDEsNzEuNSw0MC44eiAgICAgICAgTTU5LjcsNDYuNWMtMC43LTMuNi0yLjUtNi41LTUuNC04LjZjMy40LTAuNyw2LjItMi41LDguNC01LjRjMC42LDMuNiwyLjUsNi41LDUuNSw4LjZDNjQuNyw0MS45LDYxLjksNDMuOCw1OS43LDQ2LjV6IiBmaWxsPSIjMkQyRTJEIi8+PC9nPjwvZz48L2c+PGc+PGc+PGc+PHBhdGggZD0iTTQ1LjcsNTYuMmMtMy43LDQuMy04LjMsNS43LTEzLjcsNC4xYzQuMiw0LjEsNS40LDguNyw0LjEsMTMuN2MzLjctNC4xLDguMy01LjUsMTMuNy00LjEgICAgICAgQzQ2LDY2LjEsNDQuNyw2MS41LDQ1LjcsNTYuMnoiIGZpbGw9IiNFQ0Q2NTIiLz48L2c+PGc+PHBhdGggZD0iTTQ2LjcsNTYuNGMwLjEtMC40LTAuMS0wLjktMC41LTEuMWMtMC40LTAuMi0wLjktMC4xLTEuMiwwLjJjLTIuNiwzLTUuNSw0LjQtOC45LDQuNCAgICAgICBjLTEuMiwwLTIuNS0wLjItMy44LTAuNmMtMC40LTAuMS0wLjksMC4xLTEuMSwwLjVjLTAuMiwwLjQtMC4yLDAuOSwwLjIsMS4yYzMuOCwzLjcsNSw3LjksMy45LDEyLjhjLTAuMSwwLjQsMC4xLDAuOSwwLjUsMS4xICAgICAgIGMwLjEsMC4xLDAuMywwLjEsMC41LDAuMWMwLjMsMCwwLjUtMC4xLDAuNy0wLjNjMy41LTMuOSw3LjctNS4xLDEyLjctMy44YzAuNCwwLjEsMC45LTAuMSwxLjEtMC41YzAuMi0wLjQsMC4yLTAuOS0wLjItMS4yICAgICAgIEM0Nyw2NS42LDQ1LjcsNjEuNCw0Ni43LDU2LjR6IE0zNy42LDcxLjRjMC4yLTMuNC0wLjgtNi42LTIuOS05LjVjMC41LDAsMSwwLjEsMS40LDAuMWMzLjEsMCw1LjgtMSw4LjMtMyAgICAgICBjLTAuMSwzLjUsMC44LDYuNywyLjksOS42QzQzLjcsNjguMiw0MC40LDY5LjEsMzcuNiw3MS40eiIgZmlsbD0iIzJEMkUyRCIvPjwvZz48L2c+PC9nPjxnPjxnPjxnPjxwYXRoIGQ9Ik04OS43LDUwYy0zLjEsNC45LTcuNCw3LTEyLjYsNi45YzQuOCwyLjgsNy4xLDcsNi45LDEyLjZjMy00LjUsNy4yLTYuOCwxMi42LTYuOSAgICAgICBDOTEuNiw1OS45LDg5LjQsNTUuNyw4OS43LDUweiIgZmlsbD0iI0VDRDY1MiIvPjwvZz48Zz48cGF0aCBkPSJNOTcuMSw2MS43Yy00LjYtMi42LTYuNy02LjQtNi4zLTExLjZjMC0wLjUtMC4zLTAuOS0wLjctMXMtMC45LDAtMS4yLDAuNGMtMi45LDQuNS02LjcsNi41LTExLjcsNi40ICAgICAgIGMtMC41LDAtMC45LDAuMy0xLDAuN2MtMC4xLDAuNCwwLjEsMC45LDAuNSwxLjFjNC41LDIuNiw2LjYsNi41LDYuNCwxMS43YzAsMC40LDAuMywwLjksMC43LDFjMC4xLDAsMC4yLDAsMC4zLDAgICAgICAgYzAuMywwLDAuNi0wLjIsMC44LTAuNWMyLjgtNC4zLDYuNy02LjQsMTEuOC02LjRjMC41LDAsMC44LTAuMywxLTAuOFM5Ny41LDYyLDk3LjEsNjEuN3ogTTg0LjksNjYuN2MtMC40LTMuNi0yLTYuNi00LjgtOC45ICAgICAgIGMzLjQtMC41LDYuMy0yLjEsOC43LTQuOGMwLjQsMy42LDIsNi42LDQuOSw4LjlDOTAuMiw2Mi40LDg3LjMsNjQuMSw4NC45LDY2Ljd6IiBmaWxsPSIjMkQyRTJEIi8+PC9nPjwvZz48L2c+PC9nPjwvZz48L3N2Zz4='
          style="display: block; margin-left: auto; margin-right: auto; width: 40%"
          ></img>
@@ -245,7 +264,7 @@
   
   <!-- From https://www.iconfinder.com/icons/725556/color_colors_fan_pallet_pantone_icon -->
   <div id="colorToolIcon2"
-       style='float: left; margin: 20px'>
+       style='float: left; margin: 20px; text-align: center'>
     <img id="colorToolIcon2"
            class="tool-button"
            data-tool-name="huechangerTool"
@@ -254,6 +273,19 @@
            ></img>
     <br />
     <p> Dynamic Hue Pen </p>
+  </div>
+
+  <!-- From https://www.iconfinder.com/icons/725558/clear_delete_erase_remove_rubber_icon -->
+  <div id="colorToolIcon3"
+       style='float: left; margin: 20px; text-align: center'>
+    <img id="colorToolIcon2"
+           class="tool-button"
+           data-tool-name="eraserTool"
+           src='data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiA/PjwhRE9DVFlQRSBzdmcgIFBVQkxJQyAnLS8vVzNDLy9EVEQgU1ZHIDEuMS8vRU4nICAnaHR0cDovL3d3dy53My5vcmcvR3JhcGhpY3MvU1ZHLzEuMS9EVEQvc3ZnMTEuZHRkJz48c3ZnIGVuYWJsZS1iYWNrZ3JvdW5kPSJuZXcgMCAwIDEyOCAxMjgiIGlkPSLQodC70L7QuV8xIiB2ZXJzaW9uPSIxLjEiIHZpZXdCb3g9IjAgMCAxMjggMTI4IiB4bWw6c3BhY2U9InByZXNlcnZlIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIj48Zz48Y2lyY2xlIGN4PSI2NCIgY3k9IjY0IiBmaWxsPSIjRjZGM0UwIiByPSI2MiIvPjxnPjxnPjxwYXRoIGQ9Ik04NS4zLDUuN2wtNDgsNDhjLTYuMSw2LjEtNi4xLDE2LjEsMCwyMi4yTDUxLDg5LjhjNi4xLDYuMSwxNi4xLDYuMSwyMi4yLDBsNDguNS00OC41ICAgICBDMTE1LjIsMjQuOCwxMDEuOSwxMS44LDg1LjMsNS43eiIgZmlsbD0iI0EzQ0E1NSIvPjwvZz48ZyBvcGFjaXR5PSIwLjEiPjxwYXRoIGQ9Ik0zNy4yLDc2TDUxLDg5LjhjNi4xLDYuMSwxNi4xLDYuMSwyMi4yLDBsLTM2LTM2QzMxLjEsNTkuOSwzMS4xLDY5LjksMzcuMiw3NnoiIGZpbGw9IiMwNDA2MDYiLz48L2c+PGc+PHBhdGggZD0iTTg1LjMsNS43TDc0LjcsMTYuM2wzNiwzNmwxMS0xMUMxMTUuMiwyNC44LDEwMS45LDExLjgsODUuMyw1Ljd6IiBmaWxsPSIjRTM3MjVEIi8+PC9nPjxnPjxyZWN0IGZpbGw9IiNFN0U4RTMiIGhlaWdodD0iNTAuOSIgdHJhbnNmb3JtPSJtYXRyaXgoMC43MDcxIC0wLjcwNzEgMC43MDcxIDAuNzA3MSAtMC42OTI3IDc0LjEwNzkpIiB3aWR0aD0iMTAuNiIgeD0iODMuOCIgeT0iMTIuNSIvPjwvZz48Zz48cGF0aCBkPSJNMTExLjYsNTEuNGwtMzYtMzZjLTAuNC0wLjQtMS0wLjQtMS40LDBsLTcuNSw3LjVjLTAuNCwwLjQtMC40LDEsMCwxLjRsMzYsMzZjMC4yLDAuMiwwLjQsMC4zLDAuNywwLjMgICAgIHMwLjUtMC4xLDAuNy0wLjNsNy41LTcuNUMxMTEuOSw1Mi40LDExMS45LDUxLjgsMTExLjYsNTEuNHogTTEwMy4zLDU4LjJMNjguOCwyMy43bDYuMS02LjFsMzQuNiwzNC42TDEwMy4zLDU4LjJ6IiBmaWxsPSIjMkQyRTJEIi8+PC9nPjxnPjxwYXRoIGQ9Ik03Mi41LDg5LjFjLTIuOCwyLjgtNi41LDQuMy0xMC40LDQuM2MtMy45LDAtNy42LTEuNS0xMC40LTQuM0wzNy45LDc1LjNjLTUuNy01LjctNS43LTE1LjEsMC0yMC44ICAgICBMODYuMyw2LjFjLTAuNy0wLjMtMS40LTAuNS0yLjEtMC44TDM2LjUsNTMuMWMtNi41LDYuNS02LjUsMTcuMSwwLDIzLjZsMTMuOCwxMy44YzMuMiwzLjIsNy40LDQuOSwxMS44LDQuOSAgICAgYzQuNSwwLDguNy0xLjcsMTEuOC00LjlsNDguMi00OC4yYy0wLjMtMC43LTAuNS0xLjQtMC44LTJMNzIuNSw4OS4xeiIgZmlsbD0iIzJEMkUyRCIvPjwvZz48L2c+PC9nPjwvc3ZnPg=='
+           style='display: block; margin-left: auto; margin-right: auto; width: 40%'
+           ></img>
+    <br />
+    <p> Eraser </p>
   </div>
 </body>
 </html> 
