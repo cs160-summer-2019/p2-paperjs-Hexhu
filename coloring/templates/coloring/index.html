@@ -1,3 +1,4 @@
+
 {% load static %}
 
 <!DOCTYPE html>
@@ -38,6 +39,7 @@
 	</style>
 
 	<script type="text/javascript" canvas="canvas">
+    
 		window.onload = function() {
 			var canvas = document.getElementById('myCanvas');
 
@@ -54,45 +56,6 @@
 				options: [],
 				$container: $('#color-palette')
 			}
-
-			// your rectangle gradient interaction goes in this function
-			// you may also add code outside of the function (e.g., global variables)
-			function myGradientInteraction(path) {
-				var tool = new paper.Tool();
-
-				gradientOrigin = null;
-				gradientDest   = null;
-
-				tool.onMouseDown = function (event) {
-					gradientOrigin = event.point;
-				}
-
-				tool.onMouseUp = function (event) {
-					gradientDest = event.point;
-					path.fillColor = {
-						gradient: {
-								stops: [cp.history[cp.history.length - 1], cp.history[cp.history.length - 2]]
-						},
-						origin: gradientOrigin,
-						destination: gradientDest
-					};
-					paper.view.draw();
-				}
-			}
-
-			// your custom interaction goes here!
-			// you may replace everything
-			function myCustomInteraction() {
-				var tool = new paper.Tool();
-
-				tool.onMouseDown = function (event) {
-				    var hit = mandala.item.hitTest(event.point, { tolerance: 10, fill: true });
-				    if (hit) {
-				        hit.item.fillColor = cp.history[cp.history.length - 1];
-				    }
-				}
-			}
-
 
 			// create a color palette with the given colors
 			function createColorPalette(colors) {
@@ -123,34 +86,111 @@
 
 			function init(custom) {
 				paper.setup(canvas);
+        
+        // From https://stackoverflow.com/questions/49215584/toggling-multiple-tools-on-paper-js
+        // Find a Tool in `paper.tools` and activate it
+        const activateTool = name => {
+          const tool = paper.tools.find(tool => tool.name === name)
+          tool.activate()
+        }
+        
 				getColorsCreatePalette();
 
 				paper.project.importSVG(mandala.filePath, function(item) {
 					mandala.item = item._children["design-freepik"];
-				    paper.project.insertLayer(0,mandala.item);
+          paper.project.insertLayer(0, mandala.item);
 
-						let path = new paper.Path();
-						path.add(new paper.Point(120, 270));
-						path.add(new paper.Point(270, 120));
-						path.add(new paper.Point(420, 270));
-						path.closed = true;
-						path.strokeColor = 'black';
-						path.strokeWidth = 5;
-						path.fillColor = 'red';
-						path.insertAbove(mandala.item);
+          // For project 2 Cycle III
+          // For documentation, see https://docs.google.com/document/d/1-p37Lujq6QtOg6td_Gt5AGCiiwleA3bv6JHiHBX0jXQ/edit?usp=sharing
+      
+          ;(() => {
 
-				    if (custom) {
-				    	myCustomInteraction();	
-				    } else {
-				    	myGradientInteraction(path);
-				    }
-					
+            console.log("huechanger selected");
+            var tool = new paper.Tool();
+            tool.name='huechangerTool'
+
+            tool.onMouseDown = function (event) {
+              var hit = mandala.item.hitTest(event.point, { tolerance: 10, fill: true });
+              if (hit) {  
+                hit.item.fillColor = cp.history[cp.history.length - 1];
+                paper.view.onFrame = function onFrame(event) {
+                  if (event.count % 2 === 0) {
+                    hit.item.fillColor.hue += 1;
+                    //console.log("?");
+                    paper.view.draw();
+                  }
+                }
+                console.log("changed color to red");
+              }
+            }
+
+          })()
+          
+          
+          ;(() => {
+            var tool = new paper.Tool();
+            tool.name='randomColorRay';
+            let startPos;
+            let endPos;
+            let lastObj;
+
+              tool.onMouseDown = function (event) {
+                console.log(event.point);
+                startPos = event.point;
+                /*var hit = mandala.item.hitTest(event.point, { tolerance: 10, fill: true });
+                if (hit) {
+                  c1 = getRandomColor();
+                  console.log(c1)
+                  hit.item.fillColor = c1;
+                }*/
+              }
+              
+              tool.onMouseUp = function (event) {
+                console.log(event.point)
+                endPos = event.point;
+                  
+                let sampleNum = 30;
+                let stepX = (endPos.x - startPos.x) / sampleNum
+                let stepY = (endPos.y - startPos.y) / sampleNum
+                for (let i = 0; i < sampleNum; i += 1) {
+                  let hit = mandala.item.hitTest(new paper.Point(startPos.x+stepX*i, startPos.y+stepY*i), { tolerance: 10, fill: true });
+                  if (hit) {
+                      //hit.item.fillColor = new paper.Color().random();
+                    hit.item.fillColor = paper.Color.random();
+                  }
+                }
+              }
+          })()
+          
+          ;(() => {
+            var tool = new paper.Tool();
+            tool.name='defaultColorTool'
+
+            tool.onMouseDown = function (event) {
+                var hit = mandala.item.hitTest(event.point, { tolerance: 10, fill: true });
+                if (hit) {
+                    hit.item.fillColor = cp.history[cp.history.length - 1];
+                }
+            }
+          })()
+          
+          // From https://stackoverflow.com/questions/49215584/toggling-multiple-tools-on-paper-js 
+          // Attach click handlers for Tool activation on all
+          // DOM buttons with class '.tool-button'
+          document.querySelectorAll('.tool-button').forEach(toolBtn => {
+            toolBtn.addEventListener('click', e => {
+              activateTool(e.target.getAttribute('data-tool-name'))
+            })
+          })
+          
+          //useTool();
+          //console.log("useTool(): finished.") // Should never be reached
 				}); 
 			}
-
+      
 			// To see your myGradientInteraction version visit: 
 			// http://<your url>:8000/coloring/?type=gradient
-			// To see your myCustomInteraction version visit: 
+			// To see defaultColorTool version visit: 
 			// http://<your url>:8000/coloring/
 			var url = window.location.href;
 			if (url.indexOf("gradient") > -1) {
@@ -159,11 +199,48 @@
 				init(true);
 			}
 		}
+    
+    // Helpers
+    function getRandomColor() {
+      var letters = '0123456789ABCDEF';
+      var color = '#';
+      for (var i = 0; i < 6; i++) {
+        color += letters[Math.floor(Math.random() * 16)];
+      }
+      return color;
+    }
 	</script>
 </head>
+  
 <body>	
 
 	<canvas id="myCanvas" width="750px" height="750px"></canvas>
 	<div id="color-palette"></div>
+  
+  <!-- From https://www.iconfinder.com/icons/4851516/creative_design_draw_illustration_pen_pencil_write_icon -->
+  <div id="colorToolIcon1"
+       style='float: left; margin: 20px'>
+    <img 
+         class="tool-button"
+         data-tool-name="randomColorRay"
+         src='data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiA/PjwhRE9DVFlQRSBzdmcgIFBVQkxJQyAnLS8vVzNDLy9EVEQgU1ZHIDEuMS8vRU4nICAnaHR0cDovL3d3dy53My5vcmcvR3JhcGhpY3MvU1ZHLzEuMS9EVEQvc3ZnMTEuZHRkJz48c3ZnIGhlaWdodD0iMjJweCIgc3R5bGU9InNoYXBlLXJlbmRlcmluZzpnZW9tZXRyaWNQcmVjaXNpb247IHRleHQtcmVuZGVyaW5nOmdlb21ldHJpY1ByZWNpc2lvbjsgaW1hZ2UtcmVuZGVyaW5nOm9wdGltaXplUXVhbGl0eTsgZmlsbC1ydWxlOmV2ZW5vZGQ7IGNsaXAtcnVsZTpldmVub2RkIiB2ZXJzaW9uPSIxLjEiIHZpZXdCb3g9IjAgMCA0LjM1IDMuNTMiIHdpZHRoPSIyN3B4IiB4bWw6c3BhY2U9InByZXNlcnZlIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIj48ZGVmcz48c3R5bGUgdHlwZT0idGV4dC9jc3MiPgogICA8IVtDREFUQVsKICAgIC5maWwwIHtmaWxsOmJsYWNrO2ZpbGwtcnVsZTpub256ZXJvfQogICBdXT4KICA8L3N0eWxlPjwvZGVmcz48ZyBpZD0iTGF5ZXJfeDAwMjBfMSI+PHBhdGggY2xhc3M9ImZpbDAiIGQ9Ik00LjIgMC4yOWwwLjAxIDAuMDFjMC4xMSwwLjE2IDAuMTYsMC4zNSAwLjEzLDAuNTMgLTAuMDIsMC4xOCAtMC4xMiwwLjM1IC0wLjI4LDAuNDdsLTIuOTUgMi4yMiAtMC43NyAwLjAxYy0wLjA1LDAgLTAuMSwtMC4wMSAtMC4xNSwtMC4wNCAtMC4wNSwtMC4wMiAtMC4wOSwtMC4wNSAtMC4xMiwtMC4xIC0wLjAzLC0wLjA0IC0wLjA2LC0wLjA5IC0wLjA3LC0wLjE0IDAsLTAuMDUgMCwtMC4xIDAuMDIsLTAuMTZsMC4yMiAtMC43MyAyLjk1IC0yLjIyYzAuMTYsLTAuMTIgMC4zNSwtMC4xNiAwLjUzLC0wLjEzIDAuMTksMC4wMiAwLjM2LDAuMTIgMC40OCwwLjI4em0tMC45NiAwLjI2bDAuNDUgMC41OSAwLjE2IC0wLjEyYzAuMDgsLTAuMDYgMC4xMywtMC4xNSAwLjE0LC0wLjI0IDAuMDEsLTAuMDkgLTAuMDEsLTAuMTkgLTAuMDcsLTAuMjdsLTAuMDEgLTAuMDFjLTAuMDYsLTAuMDggLTAuMTQsLTAuMTMgLTAuMjQsLTAuMTQgLTAuMDksLTAuMDIgLTAuMTgsMC4wMSAtMC4yNiwwLjA2bC0wLjE3IDAuMTN6bTAuMTcgMC44bC0wLjQ1IC0wLjU5IC0yLjE5IDEuNjUgMC40NCAwLjU5IDIuMiAtMS42NXptLTIuNTEgMS44MmwtMC4zOCAtMC41MSAtMC4xNiAwLjUyIDAuNTQgLTAuMDF6Ii8+PC9nPjwvc3ZnPg=='
+         style="display: block; margin-left: auto; margin-right: auto; width: 40%"
+         ></img>
+    <br />
+    <p> Random Color Pen </p>
+  </div>
+  
+  <!-- From https://www.iconfinder.com/icons/4851515/design_draw_pen_pencil_ruler_shape_write_icon -->
+  <div id="colorToolIcon2"
+       style='float: left; margin: 20px'>
+    <img id="colorToolIcon2"
+           class="tool-button"
+           data-tool-name="huechangerTool"
+           src='data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiA/PjwhRE9DVFlQRSBzdmcgIFBVQkxJQyAnLS8vVzNDLy9EVEQgU1ZHIDEuMS8vRU4nICAnaHR0cDovL3d3dy53My5vcmcvR3JhcGhpY3MvU1ZHLzEuMS9EVEQvc3ZnMTEuZHRkJz48c3ZnIGhlaWdodD0iMTFweCIgc3R5bGU9InNoYXBlLXJlbmRlcmluZzpnZW9tZXRyaWNQcmVjaXNpb247IHRleHQtcmVuZGVyaW5nOmdlb21ldHJpY1ByZWNpc2lvbjsgaW1hZ2UtcmVuZGVyaW5nOm9wdGltaXplUXVhbGl0eTsgZmlsbC1ydWxlOmV2ZW5vZGQ7IGNsaXAtcnVsZTpldmVub2RkIiB2ZXJzaW9uPSIxLjEiIHZpZXdCb3g9IjAgMCAyLjExIDAuODUiIHdpZHRoPSIyN3B4IiB4bWw6c3BhY2U9InByZXNlcnZlIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIj48ZGVmcz48c3R5bGUgdHlwZT0idGV4dC9jc3MiPgogICA8IVtDREFUQVsKICAgIC5maWwwIHtmaWxsOmJsYWNrO2ZpbGwtcnVsZTpub256ZXJvfQogICBdXT4KICA8L3N0eWxlPjwvZGVmcz48ZyBpZD0iTGF5ZXJfeDAwMjBfMSI+PHBhdGggY2xhc3M9ImZpbDAiIGQ9Ik0wLjE2IDAuNjlsMS43OSAwIDAgLTAuNTMgLTAuNTEgMCAwIDAuMjkgLTAuMTMgMCAwIC0wLjI5IC0wLjEyIDAgMCAwLjE2IC0wLjEzIDAgMCAtMC4xNiAtMC4xMSAwIDAgMC4yOSAtMC4xMyAwIDAgLTAuMjkgLTAuMTEgMCAwIDAuMTYgLTAuMTMgMCAwIC0wLjE2IC0wLjEyIDAgMCAwLjI5IC0wLjEzIDAgMCAtMC4yOSAtMC4xNyAwIDAgMC41M3ptMS41OSAtMC4zNWMwLjA1LDAgMC4wOSwwLjA0IDAuMDksMC4wOSAwLDAuMDQgLTAuMDQsMC4wOCAtMC4wOSwwLjA4IC0wLjA1LDAgLTAuMDksLTAuMDQgLTAuMDksLTAuMDggMCwtMC4wNSAwLjA0LC0wLjA5IDAuMDksLTAuMDl6bTAuMjggMC41MWwtMi4wMyAwIDAgLTAuODUgMi4xMSAwIDAgMC44NSAtMC4wOCAweiIvPjwvZz48L3N2Zz4='
+           style='display: block; margin-left: auto; margin-right: auto; width: 40%'
+           ></img>
+    <br />
+    <p> Dynamic Hue Pen </p>
+  </div>
 </body>
-</html>
+</html> 
